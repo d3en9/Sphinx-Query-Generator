@@ -1,0 +1,9 @@
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\obj\Debug\SphinxQueryGenerator.Test.csprojResolveAssemblyReference.cache
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\SphinxQueryGenerator.Test.dll
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\SphinxQueryGenerator.Test.pdb
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\SphinxQueryGenerator.dll
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\SphinxQueryGenerator.pdb
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.xml
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\obj\Debug\SphinxQueryGenerator.Test.dll
+c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator.Test\obj\Debug\SphinxQueryGenerator.Test.pdb
