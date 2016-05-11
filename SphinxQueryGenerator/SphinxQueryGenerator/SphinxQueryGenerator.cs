@@ -22,47 +22,40 @@ namespace SphinxQueryGenerator
         /// </summary>
         /// <param name="criterion"></param>
         /// <returns></returns>
-        public string GenerateQuery<T>(T criterion) where T : ICriterion
+        public string GenerateQuery<T>(T criterion, bool shownMeta = true, bool limits = true) where T : ICriterion
         {
             // поиск свойств с установленными атрибутами для сфинкса заполнение списков атрибутов
             var properties = criterion.GetType().GetProperties();
             var matchAttributes = new List<CriterionPropertyMeta<SphinxMatchAttribute, T>>();
             var idAttributes = new List<CriterionPropertyMeta<SphinxIdAttribute, T>>();
             var constAttributes = new List<CriterionPropertyMeta<SphinxConstantAttribute, T>>();
+            var inAttributes = new List<CriterionPropertyMeta<SphinxInLongAttribute, T>>();
             foreach (var property in properties)
             {
                 var attributes = property.GetCustomAttributes<SphinxAttribute>();
-                foreach(var attribute in attributes)
-                {
-                    if (attribute is SphinxMatchAttribute)
-                    {
-                        matchAttributes.Add(new CriterionPropertyMeta<SphinxMatchAttribute, T>((SphinxMatchAttribute)attribute, property, criterion));
-                    }
-                    else if (attribute is SphinxIdAttribute)
-                    {
-                        idAttributes.Add(new CriterionPropertyMeta<SphinxIdAttribute, T>((SphinxIdAttribute)attribute, property, criterion));
-                    }
-                    else if (attribute is SphinxConstantAttribute)
-                    {
-                        constAttributes.Add(new CriterionPropertyMeta<SphinxConstantAttribute, T>(
-                            (SphinxConstantAttribute)attribute, property, criterion));
-                    }
-                }
-                
+                matchAttributes.AddRange(attributes.OfType<SphinxMatchAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxMatchAttribute, T>((SphinxMatchAttribute)attribute, property, criterion)));
+                idAttributes.AddRange(attributes.OfType<SphinxIdAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxIdAttribute, T>((SphinxIdAttribute)attribute, property, criterion)));
+                constAttributes.AddRange(attributes.OfType<SphinxConstantAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxConstantAttribute, T>((SphinxConstantAttribute)attribute, property, criterion)));
+                inAttributes.AddRange(attributes.OfType<SphinxInLongAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxInLongAttribute, T>((SphinxInLongAttribute)attribute, property, criterion)));
             }
 
             string match = GenerateMatch(matchAttributes);
             string ids = GenerateIds(idAttributes);
             string constant = GenerateConstant(constAttributes);
-            string[] whereArray = { match, ids, constant };
+            string inQuery = GenerateInLong(inAttributes);
+            string[] whereArray = { match, ids, constant, inQuery };
             var where = string.Join(" AND ", whereArray.Where(_ => _ != null));
             if (where != "")
             {
                 where = $" WHERE {@where}";
             }
-            const string limit = " limit @offset, @pageSize;";
-            const string showMeta = "show meta;";
-            var query = "SELECT id FROM " + _indexName  + where + limit + showMeta;
+            var limit = limits ? " limit @offset, @pageSize;" : "";
+            var showMeta = shownMeta ? "show meta;" : "";
+            var query = $"SELECT id FROM {_indexName} {where} {limit} {showMeta}";
             return query;
         }
 
@@ -108,7 +101,7 @@ namespace SphinxQueryGenerator
                 var queryValue = constant.Property.GetValue(constant.Criterion);
                 if (queryValue != null)
                 {
-                    var constantQuery = string.Format("{0}{1}{2}", constant.Attribute.FieldName, 
+                    var constantQuery = string.Format("{0}{1}{2}", constant.Attribute.FieldName,
                         constant.Attribute.Comparison.GetDescription(), constant.Attribute.Value);
                     constantQueries.Add(constantQuery);
                 }
@@ -118,6 +111,22 @@ namespace SphinxQueryGenerator
                 return string.Join(" AND ", constantQueries);
             }
             else return null;
+        }
+
+        private string GenerateInLong<T>(IEnumerable<CriterionPropertyMeta<SphinxInLongAttribute, T>> inmetas) where T : ICriterion
+        {
+            var inQueries = (from inmeta in inmetas
+                             let inValue = (inmeta.Property.GetValue(inmeta.Criterion) != null ? string.Join(",", inmeta.Property.GetValue(inmeta.Criterion) as IEnumerable<long>) : null)
+                             where inValue != null
+                             select
+                                 $"{inmeta.Attribute.FieldName} IN ({inValue})")
+                                .ToList();
+            if (inQueries.Count > 0)
+            {
+                return string.Join(" AND ", inQueries);
+            }
+            else return null;
+
         }
 
         public class CriterionPropertyMeta<A, C> where A : SphinxAttribute where C : ICriterion

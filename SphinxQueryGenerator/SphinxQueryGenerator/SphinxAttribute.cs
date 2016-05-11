@@ -29,6 +29,15 @@ namespace SphinxQueryGenerator
     }
 
     [System.AttributeUsage(AttributeTargets.Property)]
+    public class SphinxInLongAttribute : SphinxAttribute
+    {
+        public SphinxInLongAttribute(string fieldName) : base(fieldName)
+        {
+
+        }
+    }
+
+    [System.AttributeUsage(AttributeTargets.Property)]
     public class SphinxIdAttribute : SphinxAttribute
     {
         public int[] NullValues;

@@ -2,3 +2,4 @@ c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerat
 c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator\bin\Debug\SphinxQueryGenerator.pdb
 c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator\obj\Debug\SphinxQueryGenerator.dll
 c:\users\evgeniy\documents\visual studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator\obj\Debug\SphinxQueryGenerator.pdb
+C:\Users\Evgeniy\Documents\Visual Studio 2015\Projects\github\SphinxQueryGenerator\SphinxQueryGenerator\obj\Debug\SphinxQueryGenerator.csprojResolveAssemblyReference.cache
