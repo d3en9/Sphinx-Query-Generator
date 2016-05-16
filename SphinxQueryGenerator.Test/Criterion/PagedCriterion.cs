@@ -12,8 +12,10 @@ namespace SphinxQueryGenerator.Test
     public class PagedCriterion : ICriterion
     {
         public int PageNum { get; set; }
+        [SphinxLimitTake]
         public int PageSize { get; set; }
 
+        [SphinxLimitFrom]
         public long Offset
         {
             get

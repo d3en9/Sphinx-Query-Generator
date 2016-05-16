@@ -11,10 +11,33 @@ namespace SphinxQueryGenerator
     public class SphinxAttribute : Attribute
     {
         public string FieldName;
-        
+
+        public SphinxAttribute()
+        {
+
+        }
+
         public SphinxAttribute(string fieldName)
         {
             FieldName = fieldName;
+        }
+    }
+
+    [System.AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class SphinxLimitFromAttribute : SphinxAttribute
+    {
+        public SphinxLimitFromAttribute()
+        {
+
+        }
+    }
+
+    [System.AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class SphinxLimitTakeAttribute : SphinxAttribute
+    {
+        public SphinxLimitTakeAttribute()
+        {
+
         }
     }
 
@@ -29,9 +52,29 @@ namespace SphinxQueryGenerator
     }
 
     [System.AttributeUsage(AttributeTargets.Property)]
-    public class SphinxInLongAttribute : SphinxAttribute
+    public class SphinxInAttribute : SphinxAttribute
     {
-        public SphinxInLongAttribute(string fieldName) : base(fieldName)
+        public Type ItemType { get; private set; }
+
+        public SphinxInAttribute(string fieldName, Type itemType) : base(fieldName)
+        {
+            ItemType = itemType;
+        }
+    }
+
+    [System.AttributeUsage(AttributeTargets.Property)]
+    public class SphinxInIntAttribute : SphinxInAttribute
+    {
+        public SphinxInIntAttribute(string fieldName) : base(fieldName, typeof(int))
+        {
+
+        }
+    }
+
+    [System.AttributeUsage(AttributeTargets.Property)]
+    public class SphinxInLongAttribute : SphinxInAttribute
+    {
+        public SphinxInLongAttribute(string fieldName) : base(fieldName, typeof(long))
         {
 
         }

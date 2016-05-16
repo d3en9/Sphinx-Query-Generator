@@ -29,7 +29,10 @@ namespace SphinxQueryGenerator
             var matchAttributes = new List<CriterionPropertyMeta<SphinxMatchAttribute, T>>();
             var idAttributes = new List<CriterionPropertyMeta<SphinxIdAttribute, T>>();
             var constAttributes = new List<CriterionPropertyMeta<SphinxConstantAttribute, T>>();
-            var inAttributes = new List<CriterionPropertyMeta<SphinxInLongAttribute, T>>();
+            var inLongAttributes = new List<CriterionPropertyMeta<SphinxInAttribute, T>>();
+            var inIntAttributes = new List<CriterionPropertyMeta<SphinxInAttribute, T>>();
+            long offset = 0;
+            int pageSize = 0;
             foreach (var property in properties)
             {
                 var attributes = property.GetCustomAttributes<SphinxAttribute>();
@@ -39,21 +42,34 @@ namespace SphinxQueryGenerator
                     new CriterionPropertyMeta<SphinxIdAttribute, T>((SphinxIdAttribute)attribute, property, criterion)));
                 constAttributes.AddRange(attributes.OfType<SphinxConstantAttribute>().Select(attribute =>
                     new CriterionPropertyMeta<SphinxConstantAttribute, T>((SphinxConstantAttribute)attribute, property, criterion)));
-                inAttributes.AddRange(attributes.OfType<SphinxInLongAttribute>().Select(attribute =>
-                    new CriterionPropertyMeta<SphinxInLongAttribute, T>((SphinxInLongAttribute)attribute, property, criterion)));
+                inIntAttributes.AddRange(attributes.OfType<SphinxInIntAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxInAttribute, T>((SphinxInAttribute)attribute, property, criterion)));
+                inLongAttributes.AddRange(attributes.OfType<SphinxInLongAttribute>().Select(attribute =>
+                    new CriterionPropertyMeta<SphinxInAttribute, T>((SphinxInAttribute)attribute, property, criterion)));
+
+                inIntAttributes.AddRange(attributes.Where(_ => _.GetType() == typeof(SphinxInAttribute) && (_ as SphinxInAttribute).ItemType == typeof(int)).Select(attribute =>
+                    new CriterionPropertyMeta<SphinxInAttribute, T>((SphinxInAttribute)attribute, property, criterion)));
+                inLongAttributes.AddRange(attributes.Where(_ => _.GetType() == typeof(SphinxInAttribute) && (_ as SphinxInAttribute).ItemType == typeof(long)).Select(attribute =>
+                    new CriterionPropertyMeta<SphinxInAttribute, T>((SphinxInAttribute)attribute, property, criterion)));
+
+                var fromAttr = attributes.OfType<SphinxLimitFromAttribute>().FirstOrDefault();
+                var takeAttr = attributes.OfType<SphinxLimitTakeAttribute>().FirstOrDefault();
+                if (fromAttr != null) offset = (long)property.GetValue(criterion);
+                if (takeAttr != null) pageSize = (int)property.GetValue(criterion);
             }
 
             string match = GenerateMatch(matchAttributes);
             string ids = GenerateIds(idAttributes);
             string constant = GenerateConstant(constAttributes);
-            string inQuery = GenerateInLong(inAttributes);
-            string[] whereArray = { match, ids, constant, inQuery };
+            string inLongQuery = GenerateInLong(inLongAttributes);
+            string inIntQuery = GenerateInInt(inIntAttributes);
+            string[] whereArray = { match, ids, constant, inLongQuery, inIntQuery };
             var where = string.Join(" AND ", whereArray.Where(_ => _ != null));
             if (where != "")
             {
                 where = $" WHERE {@where}";
             }
-            var limit = limits ? " limit @offset, @pageSize;" : "";
+            var limit = limits ? $" limit {offset}, {pageSize};" : "";
             var showMeta = shownMeta ? "show meta;" : "";
             var query = $"SELECT id FROM {_indexName} {where} {limit} {showMeta}";
             return query;
@@ -113,10 +129,22 @@ namespace SphinxQueryGenerator
             else return null;
         }
 
-        private string GenerateInLong<T>(IEnumerable<CriterionPropertyMeta<SphinxInLongAttribute, T>> inmetas) where T : ICriterion
+        private string GenerateInLong<T>(IEnumerable<CriterionPropertyMeta<SphinxInAttribute, T>> inmetas) where T : ICriterion
+        {
+            return GenerateIn<T, long>(inmetas);
+        }
+
+        private string GenerateInInt<T>(IEnumerable<CriterionPropertyMeta<SphinxInAttribute, T>> inmetas) where T : ICriterion
+        {
+            return GenerateIn<T, int>(inmetas);
+        }
+
+        private string GenerateIn<T, ItemType>(IEnumerable<CriterionPropertyMeta<SphinxInAttribute, T>> inmetas) where T : ICriterion
         {
             var inQueries = (from inmeta in inmetas
-                             let inValue = (inmeta.Property.GetValue(inmeta.Criterion) != null ? string.Join(",", inmeta.Property.GetValue(inmeta.Criterion) as IEnumerable<long>) : null)
+                             let inValue = (inmeta.Property.GetValue(inmeta.Criterion) != null &&
+                                (inmeta.Property.GetValue(inmeta.Criterion) as IEnumerable<ItemType>).Count() > 0
+                                ? string.Join(",", inmeta.Property.GetValue(inmeta.Criterion) as IEnumerable<ItemType>) : null)
                              where inValue != null
                              select
                                  $"{inmeta.Attribute.FieldName} IN ({inValue})")
@@ -126,7 +154,6 @@ namespace SphinxQueryGenerator
                 return string.Join(" AND ", inQueries);
             }
             else return null;
-
         }
 
         public class CriterionPropertyMeta<A, C> where A : SphinxAttribute where C : ICriterion
